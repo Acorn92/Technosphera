@@ -3,6 +3,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h> 
 
 int 
 getFileSize(const char *fileName)
@@ -29,6 +31,29 @@ getFileSize(const char *fileName)
     return _fileSize;
 }
 
+void convertToInt(char *a, size_t lenghtA, int *b, size_t lenghtB)
+{
+
+    char * p1, *p2;
+    int count = 0;
+    while (count != (lenghtB - 1))
+        b[count++] = strtol(a, &a, 10);
+
+
+}
+
+int
+countNumber(char *a, size_t size)
+{
+    int count = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if(a[i] == ' ')
+            count++;
+    }
+    return count + 1;
+}
+
 int
 main(void)
 {
@@ -43,16 +68,27 @@ main(void)
 
     int readC = read(fd, _test, _sizeFile);
 
-    printf("До сортировки \n");
+    int numbers = countNumber(_test, _sizeFile);
+    int *_data = (int*)malloc(numbers*sizeof(int));
 
-    for (int i = 0; i < _sizeFile; i++)
-        printf("%c", _test[i]);
+    convertToInt(_test, _sizeFile, _data, numbers);
 
-    // quickSort(_test, 0, _sizeFile);
+   
+    //измерить скорость работы программы
 
-    // printf("После сортировки \n");
+    // printf("До сортировки \n");
+    
     // for (int i = 0; i < _sizeFile; i++)
     //     printf("%c", _test[i]);
 
-    //настроить отладку
+    quickSort(_data, 0, numbers);
+
+    // printf("После сортировки \n");
+    for (int i = 0; i < numbers; i++)
+        printf("%d", _data[i]);
+        
+    free(_test);
+    free(_data);
+
+    return 0;
 }
