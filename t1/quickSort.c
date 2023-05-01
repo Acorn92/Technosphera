@@ -11,7 +11,7 @@ quickSort(int *arr, int left, int right)
 }
 
 
-int 
+static int 
 partition(int *arr, int left, int right)
 {    
     int pivot = arr[(left + right) / 2];
@@ -34,7 +34,7 @@ partition(int *arr, int left, int right)
     return left;
 }
 
-void swap(int *arr, int left, int right)
+static void swap(int *arr, int left, int right)
 {
     int temp = arr[left];
     arr[left] = arr[right];

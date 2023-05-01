@@ -1,9 +1,9 @@
 #pragma once
 
-int 
+static int 
 partition(int *arr, int left, int right);
 
-void 
+static void 
 swap(int *arr, int left, int right);
 
 void

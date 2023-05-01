@@ -2,6 +2,6 @@
     "version": "2.0.0",
     "command": "gcc",
     "isShellCommand": true,
-    "args": ["-g","t1/quickSort.c","t1/main.c","-o","t1/main"],
+    "args": ["-g", "-O0","t1/mergeSort.c","t1/quickSort.c","t1/main.c","-o","t1/main"],
     "showOutput": "always"
 }
