@@ -1,4 +1,5 @@
 #include "mergeSort.h"
+#include "../Example/sysprog/1/libcoro.h"
 
 
 int* 
@@ -14,24 +15,25 @@ merge(int* a, size_t lengthA, int* b, size_t lengthB, size_t* lengthRez)
     {
         if (lengthA < lengthB)  
         {
-            lengthSort = lengthA;
-            bigMas = 2;
+            lengthSort = lengthB;
+            bigMas = 1;
         }  
         else
         {
-            lengthSort = lengthB;
-            bigMas = 1;
+            lengthSort = lengthA;
+            bigMas = 2;
         }
     }
     else
         //если равны - пофиг
         lengthSort = lengthA;
     
-    *lengthRez = lengthA + lengthB;     
-    int *rez = (int *) malloc((*lengthRez) * sizeof(int));
+    int sizeRez = lengthA + lengthB;
+    *lengthRez = sizeRez;
+    long int *rez = (long int *) malloc(sizeRez*sizeof(long int));
 
     int current = 0;
-    while ((left <= lengthSort) && (right <= lengthSort))
+    while (left < lengthSort && right < lengthSort)
     {
         if (a[left] <= b[right])
         {
@@ -45,6 +47,209 @@ merge(int* a, size_t lengthA, int* b, size_t lengthB, size_t* lengthRez)
         }
         current++;
     }
+
+    while (current < *lengthRez)
+    {
+        switch (bigMas)
+        {
+            case 0:
+            {
+                if (left != lengthSort)
+                {
+                    rez[current] = a[left];
+                    left++;
+                }
+                if (right != lengthSort)
+                {
+                    rez[current] = b[right];
+                    right++;
+                }
+                break;
+            }
+            case 1:
+            {
+                rez[current] = a[left];
+                left++;
+                break;
+            }
+            case 2:
+            {
+                rez[current] = b[right];
+                right++;
+                break;
+            }
+        }
+        current++;        
+    }
+  
+
+    return rez;
+}
+
+int* 
+mergeLI(long int* a, size_t lengthA, int* b, size_t lengthB, size_t* lengthRez)
+{
+    int left = 0;
+    //сравниваем длины массивов, если разные, то элементы наибольшего
+    //добавятся в конце результирующего, т.к. массивы уже отсортированы
+    int right = 0;
+    char bigMas = 0;//будем хранить какой массив больше: 0 - никакой, 1 - a, 2 - b
+    int lengthSort = 0;
+    if (lengthA != lengthB)
+    {
+        if (lengthA < lengthB)  
+        {
+            lengthSort = lengthB;
+            bigMas = 1;
+        }  
+        else
+        {
+            lengthSort = lengthA;
+            bigMas = 2;
+        }
+    }
+    else
+        //если равны - пофиг
+        lengthSort = lengthA;
+    
+    int sizeRez = lengthA + lengthB;
+    *lengthRez = sizeRez;
+    long int *rez = (long int *) malloc(sizeRez*sizeof(long int));
+
+    int current = 0;
+    while (left < lengthSort && right < lengthSort)
+    {
+        if (a[left] <= b[right])
+        {
+            rez[current] = a[left];
+            left++;
+        }
+        else
+        {
+            rez[current] = b[right];
+            right++;
+        }
+        current++;
+    }
+
+    while (current < *lengthRez)
+    {
+        switch (bigMas)
+        {
+            case 0:
+            {
+                if (left != lengthSort)
+                {
+                    rez[current] = a[left];
+                    left++;
+                }
+                if (right != lengthSort)
+                {
+                    rez[current] = b[right];
+                    right++;
+                }
+                break;
+            }
+            case 1:
+            {
+                rez[current] = a[left];
+                left++;
+                break;
+            }
+            case 2:
+            {
+                rez[current] = b[right];
+                right++;
+                break;
+            }
+        }
+        current++;        
+    }
+  
+
+    return rez;
+}
+
+int* 
+mergeLL(long int* a, size_t lengthA, long int* b, size_t lengthB, size_t* lengthRez)
+{
+    int left = 0;
+    //сравниваем длины массивов, если разные, то элементы наибольшего
+    //добавятся в конце результирующего, т.к. массивы уже отсортированы
+    int right = 0;
+    char bigMas = 0;//будем хранить какой массив больше: 0 - никакой, 1 - a, 2 - b
+    int lengthSort = 0;
+    if (lengthA != lengthB)
+    {
+        if (lengthA < lengthB)  
+        {
+            lengthSort = lengthB;
+            bigMas = 1;
+        }  
+        else
+        {
+            lengthSort = lengthA;
+            bigMas = 2;
+        }
+    }
+    else
+        //если равны - пофиг
+        lengthSort = lengthA;
+    
+    int sizeRez = lengthA + lengthB;
+    *lengthRez = sizeRez;
+    long int *rez = (long int *) malloc(sizeRez*sizeof(long int));
+
+    int current = 0;
+    while (left < lengthSort && right < lengthSort)
+    {
+        if (a[left] <= b[right])
+        {
+            rez[current] = a[left];
+            left++;
+        }
+        else
+        {
+            rez[current] = b[right];
+            right++;
+        }
+        current++;
+    }
+
+    while (current < *lengthRez)
+    {
+        switch (bigMas)
+        {
+            case 0:
+            {
+                if (left != lengthSort)
+                {
+                    rez[current] = a[left];
+                    left++;
+                }
+                if (right != lengthSort)
+                {
+                    rez[current] = b[right];
+                    right++;
+                }
+                break;
+            }
+            case 1:
+            {
+                rez[current] = a[left];
+                left++;
+                break;
+            }
+            case 2:
+            {
+                rez[current] = b[right];
+                right++;
+                break;
+            }
+        }
+        current++;        
+    }
+  
 
     return rez;
 }

@@ -7,13 +7,23 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <time.h>    
+#include "../Example/sysprog/1/libcoro.h"
+
+struct
+{
+    char*name;
+    int *data;
+    size_t dataSize;
+}typedef dataFile;
 
 int 
 getFileSize(const char *fileName)
 {
+    printf("entered function, getFileSize, with FileName = %s\n", fileName);
     int _fileSize = 0;
     struct stat _fileStatbuff;
     int fd = open(fileName, O_RDONLY);
+    // coro_yield();
     if (fd == -1)
     {
         _fileSize = -1;        
@@ -33,16 +43,22 @@ getFileSize(const char *fileName)
     return _fileSize;
 }
 
-void convertToInt(char *a, size_t lenghtA, int *b, size_t lenghtB)
+void 
+convertToInt(char *a, size_t lenghtA, int *b, size_t lenghtB)
 {
-
+    printf("entered function, convertToInt\n");
     char * p1, *p2;
     int count = 0;
-    while (count != lenghtB)
-        b[count++] = strtol(a, &a, 10);
+    // coro_yield();
+    while (count < lenghtB)
+    {
+        b[count] = strtol(a, &a, 10);
+        count++;
+    }
 }
 
-void convertToChar(char *a, size_t lenghtA, int *b, size_t lenghtB)
+void 
+convertToChar(char *a, size_t lenghtA, int *b, size_t lenghtB)
 {
 
 }
@@ -50,7 +66,9 @@ void convertToChar(char *a, size_t lenghtA, int *b, size_t lenghtB)
 int
 countNumber(char *a, size_t size)
 {
+    printf("entered function, countNumber\n");
     int count = 0;
+    // coro_yield();
     for (int i = 0; i < size; i++)
     {
         if(a[i] == ' ')
@@ -60,31 +78,45 @@ countNumber(char *a, size_t size)
 }
 
 int*
-getData(const char * path, size_t* lenghtData )
+getData(const char * path, size_t lenghtData )
 {
-    int rez;
-    int _sizeFile = getFileSize((path));
-    char *_test;
+    // printf("entered function, getData, with FileName = %s\n", path);
+    // int rez;
+    // int _sizeFile = getFileSize((path));
+    // char *_test;
 
-    _test = (char *)malloc(_sizeFile*sizeof(char));
-    int fd = open(path, (O_RDONLY));
+    // _test = (char *)malloc(_sizeFile*sizeof(char));
+    // int fd = open(path, (O_RDONLY));
+    FILE *fd = fopen(path, "rt");
+    int *data = (int*)malloc(lenghtData*sizeof(int));    
+    int dat;
+    char *v;
+    int countData = 0;
+    while (fscanf(fd, "%d", &data[countData]) == 1)
+        countData++;
+    // int size = fd->_IO_read_end - fd->_IO_read_base;
 
-    int readC = read(fd, _test, _sizeFile);
 
-    *lenghtData= countNumber(_test, _sizeFile);
-    int *data = (int*)malloc((*lenghtData)*sizeof(int));     
+    // int readC = read(fd, _test, _sizeFile);
 
-    convertToInt(_test, _sizeFile, data, (*lenghtData));
+    // // coro_yield();
 
-    free(_test);
-    close(fd);
+    // *lenghtData= countNumber(_test, _sizeFile);
+   
 
+    // convertToInt(_test, _sizeFile, data, (*lenghtData));
+
+    // free(_test);
+    // close(fd);
+    
+    
     return data;
 }
 
 void
 printMas(const char* nameMas, int* data, size_t lengthMas)
 {
+    printf("entered function, printMas: %s\n", nameMas);
     printf("%s: \n", nameMas);
     
     for (int i = 0; i < lengthMas; i++)
@@ -95,11 +127,72 @@ printMas(const char* nameMas, int* data, size_t lengthMas)
     printf("\n");
 }
 
+void
+printMasLong(const char* nameMas, long int* data, size_t lengthMas)
+{
+    printf("entered function, printMas: %s\n", nameMas);
+    printf("%s: \n", nameMas);
+    
+    for (int i = 0; i < lengthMas; i++)
+    {
+        printf("%d ", data[i]);
+    }
+
+    printf("\n");
+}
+
+/**
+ * Coroutine body. This code is executed by all the coroutines. Here you
+ * implement your solution, sort each individual file.
+ */
+static int
+coroutine_func_f(void *context)
+{
+	/* IMPLEMENT SORTING OF INDIVIDUAL FILES HERE. */
+    char *name = ((dataFile*)context)->name;
+    ((dataFile*)context)->data = getData(((dataFile*)context)->name, &(((dataFile*)context)->dataSize));
+
+	struct coro *this = coro_this();
+	
+	printf("Started coroutine %s\n", name);
+	printf("%s: switch count %lld\n", name, coro_switch_count(this));
+	printf("%s: yield\n", name);
+    printf("До сортировки %s\n", name);
+    printMas("data", ((dataFile*)context)->data , ((dataFile*)context)->dataSize);
+	coro_yield();    
+
+	printf("%s: switch count %lld\n", name, coro_switch_count(this));
+	printf("%s: yield\n", name);
+    quickSort(((dataFile*)context)->data , 0, (((dataFile*)context)->dataSize - 1));
+	coro_yield();
+
+	printf("%s: switch count %lld\n", name, coro_switch_count(this));
+	//other_function(name, 1);
+	printf("%s: switch count after other function %lld\n", name,
+	       coro_switch_count(this));
+    printf("После сортировки %s\n", name);
+    printMas("data", ((dataFile*)context)->data, ((dataFile*)context)->dataSize);
+	// free(name);
+	/* This will be returned from coro_status(). */
+	return 0;
+}
+
+void testStruct(void *dat)
+{
+    char *name = ((dataFile*)dat)->name;
+    ((dataFile*)dat)->dataSize = 10000;
+    ((dataFile*)dat)->data = getData(((dataFile*)dat)->name, ((dataFile*)dat)->dataSize);
+    // printMas("data", ((dataFile*)dat)->data , ((dataFile*)dat)->dataSize);
+    quickSort(((dataFile*)dat)->data , 0, (((dataFile*)dat)->dataSize - 1));
+    printf("После сортировки %s\n", name);
+    printMas("data", ((dataFile*)dat)->data, ((dataFile*)dat)->dataSize);
+}
+
 int
 main(void)
 {
     // int test[10] = {12,54,4,5,9,7,1,0,5,4};
-     // для хранения времени выполнения кода
+    // для хранения времени выполнения кода
     double time_spent = 0.0;
  
     clock_t begin = clock();
@@ -108,36 +201,90 @@ main(void)
     int fw = open("test1O.txt", O_WRONLY);
     dup2(fw, 1); 
    
-    int* data1;
-    int* data2;
-    int lengthData1, lengthData2;
-
-    data1 = getData("../Example/sysprog/1/test1.txt", &lengthData1);
-    data2 = getData("../Example/sysprog/1/test2.txt", &lengthData2);
-
-    printf("До сортировки \n");
-    printMas("data1", data1, lengthData1);
-    printMas("data2", data2, lengthData1);
     
-    quickSort(data1, 0, (lengthData1 - 1));
-    quickSort(data2, 0, (lengthData2 - 1));
+    // int* data2;
+    // size_t lengthData1, lengthData2;
 
-    printf("После сортировки \n");
+    
+    // data2 = getData("../Example/sysprog/1/test2.txt", &lengthData2);
 
-    printMas("data1", data1, lengthData1);
-    printMas("data2", data2, lengthData1);
+    
+    
+    // printMas("data2", data2, lengthData2);
+    
+   
+    // quickSort(data2, 0, (lengthData2 - 1));
 
-    int* merge12;
-    int lengthMerge12 = 0;
-    merge12 = merge(data1, lengthData1, data2, lengthData2, &lengthMerge12);
+    
 
-    printf("После слияния \n");
+    
+    // printMas("data2", data2, lengthData2);
 
-    printMas("data1+data2", merge12, lengthMerge12);
+    /* Initialize our coroutine global cooperative scheduler. */
+	coro_sched_init();
+    dataFile file1, file2, file3, file4, file5;
+    file1.name = "../Example/sysprog/1/test1.txt";
+    file2.name = "../Example/sysprog/1/test2.txt";
+    file3.name = "../Example/sysprog/1/test3.txt";
+    file4.name = "../Example/sysprog/1/test4.txt";
+    file5.name = "../Example/sysprog/1/test5.txt";
+    // coro_new(coroutine_func_f, &file1);
+    // coro_new(coroutine_func_f, &file2);
+    // coro_new(coroutine_func_f, &file3);
+    // coro_new(coroutine_func_f, &file4);
+    // coro_new(coroutine_func_f, &file5);
 
-    free(data1);
-    free(data2);
+
+    // struct coro *c;
+	// while ((c = coro_sched_wait()) != NULL) {
+	// 	/*
+	// 	 * Each 'wait' returns a finished coroutine with which you can
+	// 	 * do anything you want. Like check its exit status, for
+	// 	 * example. Don't forget to free the coroutine afterwards.
+	// 	 */
+	// 	printf("Finished %d\n", coro_status(c));
+	// 	coro_delete(c);
+	// }
+    
+    testStruct(&file1);
+    testStruct(&file2);
+    testStruct(&file3);
+    testStruct(&file4);
+    testStruct(&file5);
+    long int* merge12;
+    size_t lengthMerge12;
+    merge12 = merge(file1.data, file1.dataSize, file2.data, file2.dataSize, &lengthMerge12);
+
+    printf("После слияния \n");   
+    printf("размер file1+file2: %d\n", lengthMerge12);
+    printMasLong("file1+file2", merge12, lengthMerge12);
+
+    long int *merge123;
+    size_t lengthMerge123; 
+    merge123 = mergeLI(merge12, lengthMerge12, file3.data, file3.dataSize, &lengthMerge123);     
+    printf("размер file1+file2+file3: %d\n", lengthMerge123);
+    printMasLong("file1+file2+file3", merge123, lengthMerge123);
+    // free(merge12);
+
+    long int* merge45;
+    size_t lengthMerge45;
+    merge45 = merge(file4.data, file4.dataSize, file5.data, file5.dataSize, &lengthMerge45);
+    printf("размер file4+file5: %d\n", lengthMerge45);
+    printMasLong("file4+file5", merge45, lengthMerge45);
+
+    long int* merge12345;
+    size_t lengthMerge12345;
+    merge12345 = mergeLL(merge123, lengthMerge123, merge45, lengthMerge45, &lengthMerge12345);
+    printf("размер file1+file2+file3+file4+file5 %d\n", lengthMerge12345);
+    printMasLong("file1+file2+file3+file5+file5", merge12345, lengthMerge12345);
+
+
+    // free(data1);
+    // free(data2);
     close(fw);
+
+    //ещё раз проверить сортировку слиянием - последние значения и поведение при сортировке фалов разного 
+    //размера
 
     clock_t end = clock();
     // рассчитать прошедшее время, найдя разницу (end - begin) и
