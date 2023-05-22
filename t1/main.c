@@ -16,6 +16,8 @@ struct
     size_t dataSize;
 }typedef dataFile;
 
+static double corutineTime[5] = {0.0};
+
 int 
 getFileSize(const char *fileName)
 {
@@ -127,7 +129,8 @@ coroutine_func_f(void *context)
 {
 	/* IMPLEMENT SORTING OF INDIVIDUAL FILES HERE. */
     char *name = ((dataFile*)context)->name;
-    ((dataFile*)context)->data = getData(((dataFile*)context)->name, &(((dataFile*)context)->dataSize));
+    ((dataFile*)context)->dataSize = 10000;
+    ((dataFile*)context)->data = getData(((dataFile*)context)->name, ((dataFile*)context)->dataSize);
 
 	struct coro *this = coro_this();
 	
@@ -135,7 +138,7 @@ coroutine_func_f(void *context)
 	printf("%s: switch count %lld\n", name, coro_switch_count(this));
 	printf("%s: yield\n", name);
     printf("До сортировки %s\n", name);
-    printMas("data", ((dataFile*)context)->data , ((dataFile*)context)->dataSize);
+    // printMas("data", ((dataFile*)context)->data , ((dataFile*)context)->dataSize);
 	coro_yield();    
 
 	printf("%s: switch count %lld\n", name, coro_switch_count(this));
@@ -147,8 +150,8 @@ coroutine_func_f(void *context)
 	//other_function(name, 1);
 	printf("%s: switch count after other function %lld\n", name,
 	       coro_switch_count(this));
-    printf("После сортировки %s\n", name);
-    printMas("data", ((dataFile*)context)->data, ((dataFile*)context)->dataSize);
+    // printf("После сортировки %s\n", name);
+    // printMas("data", ((dataFile*)context)->data, ((dataFile*)context)->dataSize);
 	// free(name);
 	/* This will be returned from coro_status(). */
 	return 0;
@@ -169,7 +172,7 @@ int
 main(void)
 {
     // int test[10] = {12,54,4,5,9,7,1,0,5,4};
-    
+
     // для хранения времени выполнения кода
     double time_spent = 0.0;
  
@@ -178,25 +181,6 @@ main(void)
     //для вывода в файл
     int fw = open("test1O.txt", O_WRONLY);
     dup2(fw, 1); 
-   
-    
-    // int* data2;
-    // size_t lengthData1, lengthData2;
-
-    
-    // data2 = getData("../Example/sysprog/1/test2.txt", &lengthData2);
-
-    
-    
-    // printMas("data2", data2, lengthData2);
-    
-   
-    // quickSort(data2, 0, (lengthData2 - 1));
-
-    
-
-    
-    // printMas("data2", data2, lengthData2);
 
     /* Initialize our coroutine global cooperative scheduler. */
 	coro_sched_init();
@@ -206,48 +190,42 @@ main(void)
     file3.name = "../Example/sysprog/1/test3.txt";
     file4.name = "../Example/sysprog/1/test4.txt";
     file5.name = "../Example/sysprog/1/test5.txt";
-    // coro_new(coroutine_func_f, &file1);
-    // coro_new(coroutine_func_f, &file2);
-    // coro_new(coroutine_func_f, &file3);
-    // coro_new(coroutine_func_f, &file4);
-    // coro_new(coroutine_func_f, &file5);
+    coro_new(coroutine_func_f, &file1);
+    coro_new(coroutine_func_f, &file2);
+    coro_new(coroutine_func_f, &file3);
+    coro_new(coroutine_func_f, &file4);
+    coro_new(coroutine_func_f, &file5);
 
 
-    // struct coro *c;
-	// while ((c = coro_sched_wait()) != NULL) {
-	// 	/*
-	// 	 * Each 'wait' returns a finished coroutine with which you can
-	// 	 * do anything you want. Like check its exit status, for
-	// 	 * example. Don't forget to free the coroutine afterwards.
-	// 	 */
-	// 	printf("Finished %d\n", coro_status(c));
-	// 	coro_delete(c);
-	// }
+    struct coro *c;
+	while ((c = coro_sched_wait()) != NULL) {
+		/*
+		 * Each 'wait' returns a finished coroutine with which you can
+		 * do anything you want. Like check its exit status, for
+		 * example. Don't forget to free the coroutine afterwards.
+		 */
+		printf("Finished %d\n", coro_status(c));
+		coro_delete(c);
+	}
     
-    testStruct(&file1);
-    testStruct(&file2);
-    testStruct(&file3);
-    testStruct(&file4);
-    testStruct(&file5);
+    // testStruct(&file1);
+    // testStruct(&file2);
+    // testStruct(&file3);
+    // testStruct(&file4);
+    // testStruct(&file5);
 
     size_t lengthMerge12 = file1.dataSize + file2.dataSize;
     int* merge12 = (int*)malloc(lengthMerge12 * sizeof(int));    
     merge(file1.data, file1.dataSize, file2.data, file2.dataSize, merge12, lengthMerge12);
-    printf("После слияния \n");   
-    printf("размер file1+file2: %d\n", lengthMerge12);
-    printMas("file1+file2", merge12, lengthMerge12);
 
     size_t lengthMerge123 = lengthMerge12 + file3.dataSize;  
     int *merge123 = (int*)malloc(lengthMerge123 * sizeof(int));      
     merge(merge12, lengthMerge12, file3.data, file3.dataSize, merge123, lengthMerge123);     
-    printf("размер file1+file2+file3: %d\n", lengthMerge123);
-    printMas("file1+file2+file3", merge123, lengthMerge123);
 
     size_t lengthMerge45 = file4.dataSize + file5.dataSize;
     int* merge45 = (int*)malloc(lengthMerge45 * sizeof(int));    
     merge(file4.data, file4.dataSize, file5.data, file5.dataSize, merge45, lengthMerge45);
-    printf("размер file4+file5: %d\n", lengthMerge45);
-    printMas("file4+file5", merge45, lengthMerge45);
+
 
     size_t lengthMerge12345 = lengthMerge123 + lengthMerge45;
     int* merge12345 = (int*)malloc(lengthMerge12345 * sizeof(int));    
@@ -255,13 +233,9 @@ main(void)
     printf("размер file1+file2+file3+file4+file5 %d\n", lengthMerge12345);
     printMas("file1+file2+file3+file5+file5", merge12345, lengthMerge12345);
 
-
-    // free(data1);
-    // free(data2);
     close(fw);
 
-    //ещё раз проверить сортировку слиянием - последние значения и поведение при сортировке фалов разного 
-    //размера
+
 
     clock_t end = clock();
     // рассчитать прошедшее время, найдя разницу (end - begin) и
@@ -270,7 +244,11 @@ main(void)
  
     printf("The elapsed time is %f seconds", time_spent);
         
- 
+    /** 
+     * TODO: добавить в структуру контекста фремя работы с каждым файлом, 
+     * вынести открывание и парсинг файл из тела корутины - для дальнейшей 
+     * работы с определённым количеством корутин от пользователя
+     */
 
     return 0;
 }
