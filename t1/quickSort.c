@@ -4,9 +4,9 @@ void
 quickSort(int *arr, int left, int right)
 {
     int index = partition(arr, left, right);
+    coro_yield();
     if (left < index  - 1)
-        quickSort(arr, left, index - 1);
-    // coro_yield();
+        quickSort(arr, left, index - 1);    
     if (index < right)
         quickSort(arr, index, right);
 }

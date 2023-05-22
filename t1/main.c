@@ -22,8 +22,7 @@ getFileSize(const char *fileName)
     printf("entered function, getFileSize, with FileName = %s\n", fileName);
     int _fileSize = 0;
     struct stat _fileStatbuff;
-    int fd = open(fileName, O_RDONLY);
-    // coro_yield();
+    int fd = open(fileName, O_RDONLY);    
     if (fd == -1)
     {
         _fileSize = -1;        
@@ -48,12 +47,12 @@ convertToInt(char *a, size_t lenghtA, int *b, size_t lenghtB)
 {
     printf("entered function, convertToInt\n");
     char * p1, *p2;
-    int count = 0;
-    // coro_yield();
+    int count = 0;    
     while (count < lenghtB)
     {
-        b[count] = strtol(a, &a, 10);
+        b[count] = strtol(a, &a, 10);        
         count++;
+        coro_yield();
     }
 }
 
@@ -68,11 +67,12 @@ countNumber(char *a, size_t size)
 {
     printf("entered function, countNumber\n");
     int count = 0;
-    // coro_yield();
+    
     for (int i = 0; i < size; i++)
     {
         if(a[i] == ' ')
             count++;
+        coro_yield();
     }
     return count + 1;
 }
@@ -80,36 +80,13 @@ countNumber(char *a, size_t size)
 int*
 getData(const char * path, size_t lenghtData )
 {
-    // printf("entered function, getData, with FileName = %s\n", path);
-    // int rez;
-    // int _sizeFile = getFileSize((path));
-    // char *_test;
-
-    // _test = (char *)malloc(_sizeFile*sizeof(char));
-    // int fd = open(path, (O_RDONLY));
     FILE *fd = fopen(path, "rt");
     int *data = (int*)malloc(lenghtData*sizeof(int));    
     int dat;
     char *v;
     int countData = 0;
     while (fscanf(fd, "%d", &data[countData]) == 1)
-        countData++;
-    // int size = fd->_IO_read_end - fd->_IO_read_base;
-
-
-    // int readC = read(fd, _test, _sizeFile);
-
-    // // coro_yield();
-
-    // *lenghtData= countNumber(_test, _sizeFile);
-   
-
-    // convertToInt(_test, _sizeFile, data, (*lenghtData));
-
-    // free(_test);
-    // close(fd);
-    
-    
+        countData++;      
     return data;
 }
 
@@ -192,6 +169,7 @@ int
 main(void)
 {
     // int test[10] = {12,54,4,5,9,7,1,0,5,4};
+    
     // для хранения времени выполнения кода
     double time_spent = 0.0;
  
@@ -251,32 +229,31 @@ main(void)
     testStruct(&file3);
     testStruct(&file4);
     testStruct(&file5);
-    long int* merge12;
-    size_t lengthMerge12;
-    merge12 = merge(file1.data, file1.dataSize, file2.data, file2.dataSize, &lengthMerge12);
 
+    size_t lengthMerge12 = file1.dataSize + file2.dataSize;
+    int* merge12 = (int*)malloc(lengthMerge12 * sizeof(int));    
+    merge(file1.data, file1.dataSize, file2.data, file2.dataSize, merge12, lengthMerge12);
     printf("После слияния \n");   
     printf("размер file1+file2: %d\n", lengthMerge12);
-    printMasLong("file1+file2", merge12, lengthMerge12);
+    printMas("file1+file2", merge12, lengthMerge12);
 
-    long int *merge123;
-    size_t lengthMerge123; 
-    merge123 = mergeLI(merge12, lengthMerge12, file3.data, file3.dataSize, &lengthMerge123);     
+    size_t lengthMerge123 = lengthMerge12 + file3.dataSize;  
+    int *merge123 = (int*)malloc(lengthMerge123 * sizeof(int));      
+    merge(merge12, lengthMerge12, file3.data, file3.dataSize, merge123, lengthMerge123);     
     printf("размер file1+file2+file3: %d\n", lengthMerge123);
-    printMasLong("file1+file2+file3", merge123, lengthMerge123);
-    // free(merge12);
+    printMas("file1+file2+file3", merge123, lengthMerge123);
 
-    long int* merge45;
-    size_t lengthMerge45;
-    merge45 = merge(file4.data, file4.dataSize, file5.data, file5.dataSize, &lengthMerge45);
+    size_t lengthMerge45 = file4.dataSize + file5.dataSize;
+    int* merge45 = (int*)malloc(lengthMerge45 * sizeof(int));    
+    merge(file4.data, file4.dataSize, file5.data, file5.dataSize, merge45, lengthMerge45);
     printf("размер file4+file5: %d\n", lengthMerge45);
-    printMasLong("file4+file5", merge45, lengthMerge45);
+    printMas("file4+file5", merge45, lengthMerge45);
 
-    long int* merge12345;
-    size_t lengthMerge12345;
-    merge12345 = mergeLL(merge123, lengthMerge123, merge45, lengthMerge45, &lengthMerge12345);
+    size_t lengthMerge12345 = lengthMerge123 + lengthMerge45;
+    int* merge12345 = (int*)malloc(lengthMerge12345 * sizeof(int));    
+    merge(merge123, lengthMerge123, merge45, lengthMerge45, merge12345, lengthMerge12345);
     printf("размер file1+file2+file3+file4+file5 %d\n", lengthMerge12345);
-    printMasLong("file1+file2+file3+file5+file5", merge12345, lengthMerge12345);
+    printMas("file1+file2+file3+file5+file5", merge12345, lengthMerge12345);
 
 
     // free(data1);
